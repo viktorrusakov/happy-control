@@ -28,7 +28,7 @@ system = ControlSystem(a, b)
 
 where _a_ and _b_ are corresponding vectors.
 
-__Note__: the vector __must__ be compososed out of sympy symbols or numbers.
+__Note__: the vectors __must__ be composed out of sympy symbols or numbers.
 For example, consider a system:
 
 
