@@ -5,13 +5,13 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="napalm_control",
-    version="0.0.4",
+    version="0.0.6",
     author="Viktor Rusakov",
     author_email="vrusakov66@gmail.com",
     description="Nonlinear Algebraic Approximation in Control systems",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/pypa/sampleproject",
+    url="https://github.com/ViktorRusakov/napalm-control",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -24,5 +24,6 @@ setuptools.setup(
         'Cython>=0.29.14',
         'numpy>=1.18.1',
         'sympy>=1.5.1'
-    ]
+    ],
+    include_package_data=True,
 )
