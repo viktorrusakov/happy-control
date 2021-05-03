@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="napalm_control",
-    version="0.0.1",
+    version="0.0.4",
     author="Viktor Rusakov",
     author_email="vrusakov66@gmail.com",
     description="Nonlinear Algebraic Approximation in Control systems",
