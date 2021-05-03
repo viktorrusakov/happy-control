@@ -39,7 +39,7 @@ Then the implementation using the package would be as follows:
 import sympy as sym
 from napalm_control.approximation_tools import ControlSystem
 
-x1, t = sym.symbols('x_1 t')
+x1, t = sym.symbols('x_{1} t')
 a = sym.Matrix([0, -sym.Rational(1, 2)*x1**2 - 4*t*x1 - 3*t**2*x1, -x1**2 - 2*t*x1 - 3*t**2*x1])
 b = sym.Matrix([-1, 0, 0])
 system = ControlSystem(a, b)
