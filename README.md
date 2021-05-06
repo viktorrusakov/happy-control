@@ -13,7 +13,7 @@ pip install napalm-control
 
 ## How to use
 
-The main part of the package is implemented in a single class called ControlSystem. This class describes a control system and its methods implement the algorithm of approximation of given system.
+The main part of the package is implemented in a single class called ControlSystem. This class describes a control system and its methods implement the algorithm of approximation of a given system.
 
 ```python
 from napalm_control.approximation_tools import ControlSystem
@@ -44,4 +44,27 @@ a = sym.Matrix([0, -sym.Rational(1, 2)*x1**2 - 4*t*x1 - 3*t**2*x1, -x1**2 - 2*t*
 b = sym.Matrix([-1, 0, 0])
 system = ControlSystem(a, b)
 ```
+
+Then you have 2 options: you can either approximate this system using nonlinear power moments series or using Fliess series
+
+```python
+
+# to approximate using nonlinear power moments algebra
+system.calc_approx_system()
+
+# to approximate using Fliess algebra
+system.calc_approx_system(fliess=True)
+
+```
+
+To generate the pdf file you need to do as follows
+
+```python
+
+# to generate pdf for systems which were appoximated using Fliess series additional argument fliess=True
+system.generate_pdf()
+
+```
+
+This will produce a pdf file in your current working directory with all necessary information of the system and its approximation
 
