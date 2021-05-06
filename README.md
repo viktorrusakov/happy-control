@@ -1,7 +1,7 @@
 # Nonlinear Algebraic Approximation of Control Systems
 
 A Python implementation of an algorithm for construction homogeneous 
-approximations of nonlinear control systems. For description of the algoritm refer to ...
+approximations of nonlinear control systems. For description of the algorithm refer to ...
 
 ## Installation
 
@@ -20,7 +20,7 @@ from napalm_control.approximation_tools import ControlSystem
 ```
 
 Given a system ![equation](https://latex.codecogs.com/gif.latex?%5Cdot%7Bx%7D%3Da%28t%2Cx%29%20&plus;%20b%28t%2Cx%29u)
-you can initialize it the following way
+you can initialize it the following way:
 
 ```python
 system = ControlSystem(a, b)
@@ -57,14 +57,24 @@ system.calc_approx_system(fliess=True)
 
 ```
 
-To generate the pdf file you need to do as follows
+To generate the pdf file you need to do as follows:
 
 ```python
 
-# to generate pdf for systems which were appoximated using Fliess series additional argument fliess=True
+# to generate pdf for systems which were appoximated using Fliess series add additional argument fliess=True
 system.generate_pdf()
 
 ```
 
-This will produce a pdf file in your current working directory with all necessary information of the system and its approximation
+This will produce a pdf file named 'output.pdf' in your current working directory with all the necessary information of the system and its approximation.
+
+To customize filename and directory where the file will be saved use additional parameters
+
+```python
+
+# generate pdf in custom directory and custom filename (filename does
+# not need to include .pdf extension, it will be added automatically, so just provide the name)
+system.generate_pdf(path="path_to_directory", filename="custom_filename")
+
+```
 
