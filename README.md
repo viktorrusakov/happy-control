@@ -61,7 +61,8 @@ To generate the pdf file you need to do as follows:
 
 ```python
 
-# to generate pdf for systems which were appoximated using Fliess series add additional argument fliess=True
+# to generate pdf for systems which were appoximated using Fliess series
+# add additional argument fliess=True
 system.generate_pdf()
 
 ```
