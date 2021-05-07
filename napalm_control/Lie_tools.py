@@ -1,4 +1,3 @@
-# import time
 import pickle
 import sympy as sym
 import numpy as np
@@ -8,28 +7,27 @@ from itertools import groupby
 
 def lie_bracket(element_1, element_2):
     """
-    Раскрытие одной Ли-скобки, предполагается, что второй элемент является однородным моментом (то есть скобка растет
-    влево). На выходе получаем строку, в которой закодирован результат взятия скобки, а именно: каждое слагаемое
-    представлено знаком перед ним (если знака нет, подразумеваем, что это '+') и последовательностью индексов,
-    слагаемые разделены символом '|'.
+    Unfolds a Lie bracket. It is assumed that the second element is homogeneous (the bracket grows to the left).
+    Returns a string encoding the result of unfolding: each addend is represented as a sequence of indeces (which
+    are separated by '.'), the addends are separated by '|' and there is also a sign before each addend (it is assumed
+    to be '+' if there is no sign).
 
-        Пример 1:
-            lie_bracket('1.2', '3') = [[xi_1, xi_2], xi_3] = '1.2.3|-2.1.3|-3.1.2|3.2.1', где
+    Example 1:
+        lie_bracket('1.2', '3') = [[xi_{1}, xi_{2}], xi_{3}] = '1.2.3|-2.1.3|-3.1.2|3.2.1', where
 
         '1.2.3|-2.1.3|-3.1.2|3.2.1' = xi_{123} - xi_{213} - xi_{312} + xi_{321}
 
-        Пример 2:
-            lie_bracket('1.0|-1.1', '3') = [xi_{10} - xi_{11}, xi_3] = '1.0.3|-1.1.3|-3.1.0|3.1.1'
+    Example 2:
+        lie_bracket('1.0|-1.1', '3') = [xi_{10} - xi_{11}, xi_3] = '1.0.3|-1.1.3|-3.1.0|3.1.1'
     """
 
     if '.' not in element_1:
-        # Если первый элемент скобки является однородным моментом градуированной алгебры, то сразу возвращаем
-        # результат
+        # if the first element is homogeneous we know the result already
 
         return '|'.join([element_1 + '.' + element_2, '-' + element_2 + '.' + element_1])
 
     elif '|' not in element_1:
-        # Если первый элемент это скобка, то сначала раскрываем скобку
+        # if the first element is another Lie bracket we need to unfold it first
 
         element_1 = element_1.split('.')
         element_1 = lie_bracket(element_1[0], element_1[1])
@@ -44,8 +42,7 @@ def lie_bracket(element_1, element_2):
 
 def unfold_lie_bracket(lie_element):
     """
-        Функция, обобщающая функцию lie_bracket, то есть раскрывает скобки со вложенными скобками (скобки растут влево).
-        Выход аналогичен выходу функции lie_bracket
+    Generalization of lie_bracket function - unfolds brackets with nested brackets.
     """
 
     if len(lie_element) in [1, 2]:
@@ -61,11 +58,11 @@ def unfold_lie_bracket(lie_element):
 
 def calculate_lie_elements(max_order):
     """
-        Подсчет Ли-элементов до заданного порядка включительно (тождество Якоби не учитываем). На выходе получаем
-        словарь, где ключ это порядок, а значение - словарь, в котором ключ это закодированный вид
-        Ли-элемента, а значение - его представление в пространстве R^p (в виде numpy вектора).
+    Calculates Lie elements up to max_order (without including Jacobi identity). Returns a dictionary where key
+    represents order and value is a dictionary where key is an encoded Lie element and value is its representation
+    in R^p (as numpy array).
 
-        Пример:
+    Example:
         max_order = 3
         res = calculate_lie_elements(max_order) =>
 
@@ -83,30 +80,30 @@ def calculate_lie_elements(max_order):
             }
         }
 
-        Примеры кодировок Ли-элементов:
-            1) '1.2' = [xi_1, xi_2]
-            2) '1.2]3]5' = [[[xi_1, xi_2], xi_3], xi_5]
+        Lie element encoding example:
+            1) '1.2' = [xi_{1}, xi_{2}]
+            2) '1.2]3]5' = [[[xi_{1}, xi_{2}], xi_{3}], xi_{5}]
     """
 
     res = {}
     with open('api/moments_grading.pickle', 'rb') as f:
         moments = pickle.load(f)
     for order in range(1, max_order + 1):
-        # Градуировка моментов текущего пространства, ищем Ли-элементы по этой градуировке
         order_moments = moments[order]
         dim = len(order_moments)
         lie_elements = {}
         for index_set in order_moments.keys():
             if '.' not in index_set:
-                # однородный момент сразу добавляем
+                # homogeneous element can be added already
                 lie_elements[index_set] = order_moments[index_set]
                 continue
             else:
                 index_set = index_set.split('.')
                 if index_set[0] == index_set[1]:
                     continue
-            # находим элементы текущей длины среди уже полученных Ли-элементов для проверки на
-            # антисимметричность (для левых крайних элементов скобки, при этом остальные должны совпадать)
+            # find element of current length from already obtained Lie elements to check for antisymmetry
+            # (for outer left elements of the bracket, additionally the other ones have to match)
+
             with_current_length = filter(lambda x: len(x) == len(index_set), lie_elements.keys())
             for value in with_current_length:
                 if index_set[:2] == value[:2][::-1] and index_set[2:] == value[2:]:
@@ -134,9 +131,10 @@ def calculate_lie_elements(max_order):
 
 def get_basis_lie_elements(max_order):
     """
-        Построение базиса градуированной Ли-алгебры до заданного порядка. На выходе получаем
-        словарь, где ключ это порядок градуировки, а значение - словарь, в котором ключ это закодированный вид
-        Ли-элемента, а значение - словарь с ключем 'repr' - его представление в пространстве R^p (в виде numpy вектора).
+    Constructs a basis of graded Lie algebra up to max_order.
+    Returns a dictionary where key represents the order of the grading and value is basis data of that grading
+    represented as a dictionary where key is encoded Lie element and value (dictionary with key 'repr')
+    is its representation in R^p (as numpy array).
     """
 
     res = {}
@@ -165,8 +163,3 @@ class LieElementsNotFound(Exception):
 
 class SystemIsTooDeep(Exception):
     pass
-
-# start = time.time()
-# test = get_basis_lie_elements(13)
-# end = time.time()
-# print(round(end - start, 2))

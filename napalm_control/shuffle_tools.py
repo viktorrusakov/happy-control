@@ -3,7 +3,7 @@ import sympy as sym
 
 def shuffle_product(x, y):
     """
-    Вычисление шафл-произведения двух элементов.
+    Calculates shuffle product of two elements.
     """
     if '.' not in x:
         if '.' not in y:
@@ -28,8 +28,8 @@ def shuffle_product(x, y):
 
 def calc_shuffle_lin_comb(x='', y='', x_count=0, y_count=0):
     """
-        Шафл-произведение линейной комбинации моментов. x_count, y_count - количество раз соответствующий
-        элемент попадет в произведение.
+    Calculates shuffle product of linear combination of two moments. x_count, y_count - counts of times an element
+    appears in product.
     """
     if not x and y_count == 1:
         return y

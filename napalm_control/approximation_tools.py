@@ -357,11 +357,9 @@ class ControlSystem:
 
     def coefficient(self, indeces, fliess=False):
         """
-        Функция, считающая определенный коэффициент ряда.
-        На вход подается строка из индексов, разделитель между индексами - '.'
-        (разделитель необходим так как индексы бывают двузначные)
+        Calculates a coefficient of the series.
 
-        Пример: indeces = '1.2.3' => coefficient(indeces) = v_123
+        Example: indeces = '1.2.3' => coefficient(indeces) = v_123
         """
 
         func = self.E
@@ -377,7 +375,7 @@ class ControlSystem:
             func = self.ad(index, func)
         res = func.subs(list(zip(self.X + [self.t], [0] * (self.dim + 1))))
         zero_vect = sym.zeros(self.dim, 1)
-        # Если ады занулились, то коэф перед ними можно не считать
+        # no need to calculate coefficient if we got zero vector as result
         if res == zero_vect:
             return zero_vect
         else:
@@ -393,13 +391,9 @@ class ControlSystem:
 
     def calculate_coefficients(self, max_order, fliess=False):
         """
-        Подсчет коэффициентов ряда до заданного порядка
-        включительно. На выходе получаем словарь, в котором ключ обозначает
-        порядок, а значение ключа - соответствующие этому порядку элементы
-        (также задаются с помощью словаря, ключ - индекс коэффициента,
-        значение - посчитанное значение коэффициента)
+        Calculates coefficients of the series up to given order.
 
-        Пример:
+        Example:
             max_order = 3 => calculate_coefficients(max_order) =
             {
                 1: {'0': v_0},
@@ -424,7 +418,7 @@ class ControlSystem:
 
     def calc_series(self, max_order, fliess=False):
         """
-            Подсчет ряда системы до заданного порядка.
+        Calculates the series of the system upto given order.
         """
 
         res = sym.zeros(self.dim, 1)
@@ -461,8 +455,8 @@ class ControlSystem:
 
     def sort_lie_elements(self, fliess=False):
         """
-            Находим первые n ЛНЗ Ли-элементов (из которых будет построена главная часть системы),
-            остальные забрасываем в правый идеал.
+        Find first n linearly independent Lie elements (the main part of the system is based on them),
+        put other elements in right ideal.
         """
 
         if fliess:
@@ -474,40 +468,35 @@ class ControlSystem:
         lie_coef = {}
         main_part = {}
         ideal = {}
-        count = 0                           # счетчик кол-ва эл-ов в главной части
-        independent_coeffs = sym.Matrix()   # матрица из ЛНЗ коэф-ов
-        # rank = 0                            # ранг матрицы
-        max_order = len(lie_basis)          # макс допустимый порядок
-        zero_vect = sym.zeros(self.dim, 1)  # нулевой вектор, нужен для проверки
+        count = 0                           # elements in main part
+        independent_coeffs = sym.Matrix()   # matrix of lineanly independent coefficients
+        max_order = len(lie_basis)          # max allowed order
+        zero_vect = sym.zeros(self.dim, 1)  # need for checking for zero vector
+
         for order in range(1, max_order + 1):
 
-            # if order > max_depth:
-            #     raise SystemIsTooDeep()
-
-            # Если нашли n ЛНЗ Ли-элементов, то возвращаем результат
+            # If found necessary number of linearly independent elements, return result
             if count == self.dim:
                 self.basis_lie_elements = lie_coef
                 self.main_part_lie = main_part
                 self.ideal = ideal
                 return main_part, ideal
 
-            # Все Ли-элементы текущего порядка
+            # All Lie elements of current order
             lie_elements = lie_basis[order].keys()
             lie_coef_order = {}
 
-            # Независимые Ли-элементы текущего порядка
+            # Linearly independent Lie elements of current order
             independent = lie_basis[order].copy()
 
-            # Правый идеал текущего порядка
+            # Ideal for current order
             order_ideal = {}
 
-            # Проходим по каждому элементу
             for bracket in lie_elements:
 
-                # Коэффициент при элементе
                 v = sym.zeros(self.dim, 1)
 
-                # Раскрываем скобку и считаем коэф при ней
+                # Unfold the bracket and calculate coefficient
                 unfolded = unfold_lie_bracket(bracket).split('|')
                 for element in unfolded:
                     if element.startswith('-'):
@@ -516,15 +505,14 @@ class ControlSystem:
                         v += self.coefficient(element, fliess)
                 lie_coef_order[bracket] = v
 
-                # Если нулевой, то сразу забрасываем в идеал
+                # If coefficient is zero place element in ideal
                 if v == zero_vect:
                     order_ideal[bracket] = v
                     independent.pop(bracket)
                     continue
 
-                # Добавляем коэф в матрицу всех ЛНЗ из предыдущих порядков
-                # для проверки на ЛЗ, если ранг м-цы не поменялся - забрасываем
-                # в идеал
+                # Add coefficient to matrix of all independent elements of all previous orders to check for dependency.
+                # If rank did not change - place the element in ideal
                 new_mat = sym.Matrix.hstack(independent_coeffs, v)
                 new_rank = new_mat.rank()
                 if new_rank == count:
@@ -534,30 +522,26 @@ class ControlSystem:
                     independent[bracket]['coef'] = v
 
             lie_coef[order] = lie_coef_order
-            # Если нашлись ЛНЗ элементы, то нужно проверить, что их лин. комб.
-            # тоже является ЛНЗ. Если существуют зависимые лин. комб. каких-то
-            # элементов, то забрасываем эти комбинации в идеал.
+            # If found independent elements we need to check that their linear combination is also linearly independent.
+            # If there exist dependent combinations we need to place them into the ideal
             if independent:
                 brackets, data = zip(*independent.items())
                 rep = [p['coef'] for p in data]
 
-                # Добавляем все найденные незав. коэф. в матрицу коэф-ов
-                # предыдущих порядков
+                # Add all found independent coefficient to matrix of coefficients of previous orders
                 new_coef_mat = np.concatenate(rep).reshape((-1, len(rep)), order='F')
                 new_mat = sym.Matrix.hstack(independent_coeffs, sym.Matrix(new_coef_mat))
                 new_rank = new_mat.rank()
 
-                # Если ранг м-цы повысился на добавленное кол-во элементов,
-                # то забрасываем все в главную часть, а в идеал - ничего,
-                # если нет, то ищем какие лин. комб. пойдут в идеал
+                # If rank of the matrix grew by number of added element we put all element into main part,
+                # else we find the elements which will go to ideal
                 if new_rank == count + len(independent):
                     independent_coeffs = new_mat
-                    # rank = new_rank
                     main_part[order] = independent
                     count += len(independent)
                 else:
                     kernel = new_mat.nullspace()
-                    nonzero = list(range(len(independent)))  # для нахождения эл-ов из главной части
+                    nonzero = list(range(len(independent)))  # to find element for main part
                     for basis_vector in kernel:
                         coefs = basis_vector[-len(independent):]
                         bad_elem = ''
@@ -585,7 +569,7 @@ class ControlSystem:
 
     def calculate_lie_projections(self, fliess=False):
         """
-        Подсчет проекций первых self.dim ЛНЗ Ли-элементов на ортогональное дополнение к правому идеалу
+        Calculates projection of linearly independent Lie elements onto the orthogonal complement of the right ideal.
         """
 
         main_part, ideal = self.sort_lie_elements(fliess)
@@ -599,7 +583,6 @@ class ControlSystem:
         main_orders, bad_orders = main_part.keys(), ideal.keys()
         i = 1
 
-        # Проходим по всем порядкам элементов для главной части
         for order in main_orders:
             order_matrix = sym.Matrix()
             order_projections = []
@@ -608,11 +591,11 @@ class ControlSystem:
             basis = np.eye(dim, dtype=int)
             moments_repr = {moments[i]: basis[:, [i]] for i in range(dim)}
 
-            # По всем порядкам элементов правого идеала (дополняем правый идеал домножением элементов из идеала
-            # на подалгебру нужного порядка)
+            # Go over all orders of the right ideal (complement the right idea with multiplying of element from the
+            # ideal by subalgebra of the need order)
             for bad_order in bad_orders:
 
-                # Если дошли до текущего порядка элементов главной части, то домножать ни на что не надо
+                # If reached the current order of main part we do not need to multiply anymore
                 if bad_order == order:
                     for lie_elem in ideal[bad_order]:
                         elem = lie_elem.split('|')
@@ -637,7 +620,7 @@ class ControlSystem:
                         order_matrix = order_matrix.row_join(sym.Matrix(new_elem_repr))
                     break
                 else:
-                    # Элементы подалгебры, которыми будем дополнять идеал
+                    # Elements of subalgebra which will complement the ideal
                     algebra_elems = indeces[order - bad_order]
                     for lie_elem in ideal[bad_order]:
                         unfolded = lie_elem.split('|')
@@ -674,19 +657,14 @@ class ControlSystem:
                                     new_elem_repr *= sym.Rational(element[0])
                             order_matrix = order_matrix.row_join(sym.Matrix(new_elem_repr))
 
-            # если идеал не пустой, то ищем проекции Ли-элементов на его ортогональное дополнение
+            # If ideal is not empty - find the projections of Lie element onto its orthogonal complement
             if order_matrix:
                 rank = order_matrix.rank()
                 transpose = order_matrix.T.echelon_form()[:rank, :]
                 order_matrix = transpose.T
-                # transpose = order_matrix.T
                 multi = transpose * order_matrix
                 for a, v in main_part[order].items():
-                    try:
-                        a_2 = v['repr'] - order_matrix * multi.LUsolve(transpose * v['repr'])
-                    except NotImplementedError:
-                        raise ValueError('a: {}, transpose: {}, order_matrix: {}, multi: {}, ideal_7: {}, rank: {}'.format(
-                            len(v['repr']), transpose.shape, order_matrix.shape, multi.shape, len(right_ideal[7]), order_matrix.rank()))
+                    a_2 = v['repr'] - order_matrix * multi.LUsolve(transpose * v['repr'])
                     a2_algebra = ''
                     for j in range(len(a_2)):
                         if a_2[j]:
@@ -699,7 +677,7 @@ class ControlSystem:
                     })
                     i += 1
 
-            # если пустой, то проекциями являются сами Ли-элементы
+            # If its empty then Lie elements are the projections themselves
             else:
                 for a, v in main_part[order].items():
                     unfolded = unfold_lie_bracket(a)
@@ -762,9 +740,6 @@ class ControlSystem:
                 proj['xi_prime'] = result_xi[1:]
 
     def calc_b_0_stationary(self):
-        """
-        Подсчет аппроксимирующей системы.
-        """
         projections = self.projections
         with open(os.path.join(BASE_DIR, 'napalm_control/nonlinear_moments/moments_grading.pickle'), 'rb') as f:
             indeces = pickle.load(f)
@@ -772,8 +747,7 @@ class ControlSystem:
         for order in orders:
             order_projections = projections[order]
             for projection in order_projections:
-                # группировка моментов по одинаковому последнему индексу и сортировка по нему
-                # for value in projection['algebra_repr'].split('|'):
+                # group moments by last matching index and sort by it
                 cur_order = order - 1
                 if cur_order == 0 and not projection['phi_prime']:
                     continue
@@ -781,8 +755,8 @@ class ControlSystem:
                 dim = len(moments)
                 basis = np.eye(dim, dtype=int)
                 moments_repr = {moments[i]: basis[:, [i]] for i in range(dim)}
-                order_matrix = sym.Matrix()    # матрица представлений шафл-элементов текущего порядка
-                order_shuffle_basis = []      # шафл-элементы текущего порядка
+                order_matrix = sym.Matrix()    # matrix of representation of shuffle elements of current order
+                order_shuffle_basis = []      # shuffle elements of current order
                 previous_elements = []
                 for prev_order in orders:
                     if prev_order > cur_order:
@@ -876,9 +850,6 @@ class ControlSystem:
                         self.b_0_stationary[projection['index'] - 1] += -shuffle_repr[i] * elem_res
 
     def calc_b_1_stationary(self):
-        """
-        Подсчет аппроксимирующей системы.
-        """
         projections = self.projections
         with open(os.path.join(BASE_DIR, 'napalm_control/nonlinear_moments/moments_grading.pickle'), 'rb') as f:
             indeces = pickle.load(f)
@@ -886,8 +857,6 @@ class ControlSystem:
         for order in orders:
             order_projections = projections[order]
             for projection in order_projections:
-                # группировка моментов по одинаковому последнему индексу и сортировка по нему
-                # for value in projection['algebra_repr'].split('|'):
                 cur_order = order - 1
                 if projection['xi_prime'].endswith('e'):
                     split_value = projection['xi_prime'].split('x')
@@ -902,8 +871,8 @@ class ControlSystem:
                 dim = len(moments)
                 basis = np.eye(dim, dtype=int)
                 moments_repr = {moments[i]: basis[:, [i]] for i in range(dim)}
-                order_matrix = sym.Matrix()    # матрица представлений шафл-элементов текущего порядка
-                order_shuffle_basis = []      # шафл-элементы текущего порядка
+                order_matrix = sym.Matrix()
+                order_shuffle_basis = []
                 previous_elements = []
                 for prev_order in orders:
                     if prev_order > cur_order:
@@ -1006,7 +975,7 @@ class ControlSystem:
 
     def calc_approx_system(self, fliess=False):
         """
-        Подсчет аппроксимирующей системы.
+        Calculates approximating system
         """
         projections = self.calculate_lie_projections(fliess)
         if not fliess:
@@ -1024,7 +993,7 @@ class ControlSystem:
         for order in orders:
             order_projections = projections[order]
             for projection in order_projections:
-                # Если проекция это однородный момент, то можно сразу записывать результат
+                # If projection is homogeneous we can get the result already
                 if '.' not in projection['algebra_repr']:
                     value = projection['algebra_repr'].split('x')
                     if len(value) == 2:
@@ -1039,7 +1008,7 @@ class ControlSystem:
                     else:
                         self.b_1[projection['index'] - 1] = coef * self.t**int(value[-1])
                 else:
-                    # группировка моментов по одинаковому последнему индексу и сортировка по нему
+                    # group moments by last matching index and sort by it
                     if fliess:
                         grouped = {k: [m for m in g] for k, g in groupby(sorted(projection['algebra_repr'].split('|'),
                                                                                 key=lambda x: x.split('.')[0][-1]),
@@ -1049,11 +1018,11 @@ class ControlSystem:
                                                                                 key=lambda x: x.split('.')[-1]),
                                                                          key=lambda x: x[-1])}
                     for decomp_index, value in grouped.items():
-                        cur_order = order - 1  # порядок элементов без последнего индекса
+                        cur_order = order - 1  # Order of elements without last index
                         if not fliess:
                             cur_order -= int(decomp_index)
                         if cur_order == 0:
-                            # если момент был однородным, то сразу пишем результат
+                            # if moment is homogeneous
                             split_value = value[0].split('x')
                             if len(split_value) == 2:
                                 coef = -sym.Rational(split_value[0])
@@ -1070,12 +1039,11 @@ class ControlSystem:
                                 self.b_1[projection['index'] - 1] += coef * self.t ** int(split_value[-1])
                             continue
                         moments = indeces[cur_order]
-                        # moments_repr = indeces[cur_order]
                         dim = len(moments)
                         basis = np.eye(dim, dtype=int)
                         moments_repr = {moments[i]: basis[:, [i]] for i in range(dim)}
-                        order_matrix = sym.Matrix()    # матрица представлений шафл-элементов текущего порядка
-                        order_shuffle_basis = []      # шафл-элементы текущего порядка
+                        order_matrix = sym.Matrix()
+                        order_shuffle_basis = []
                         previous_elements = []
                         for prev_order in orders:
                             if prev_order > cur_order:
