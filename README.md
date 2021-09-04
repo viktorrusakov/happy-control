@@ -8,7 +8,7 @@ approximations of nonlinear control systems. For description of the algorithm re
 You can install the package using pip
 
 ```
-pip install napalm-control
+pip install happy-control
 ```
 
 ## How to use
