@@ -191,10 +191,10 @@ class ControlSystem:
     def get_projections_text(self, fliess=False):
         projections = self.projections
         if fliess:
-            with open(os.path.join(BASE_DIR, 'napalm_control/fliess/lie_basis.pickle'), 'rb') as lb:
+            with open(os.path.join(BASE_DIR, 'happy_control/fliess/lie_basis.pickle'), 'rb') as lb:
                 lie_basis = pickle.load(lb)
         else:
-            with open(os.path.join(BASE_DIR, 'napalm_control/nonlinear_moments/lie_basis.pickle'), 'rb') as lb:
+            with open(os.path.join(BASE_DIR, 'happy_control/nonlinear_moments/lie_basis.pickle'), 'rb') as lb:
                 lie_basis = pickle.load(lb)
         text = r'''\centerline{\Large\bf Principal part}
         \begin{align*}
@@ -404,10 +404,10 @@ class ControlSystem:
 
         res = {}
         if fliess:
-            with open(os.path.join(BASE_DIR, 'napalm_control/fliess/moments_grading.pickle'), 'rb') as f:
+            with open(os.path.join(BASE_DIR, 'happy_control/fliess/moments_grading.pickle'), 'rb') as f:
                 indeces = pickle.load(f)
         else:
-            with open(os.path.join(BASE_DIR, 'napalm_control/nonlinear_moments/moments_grading.pickle'), 'rb') as f:
+            with open(os.path.join(BASE_DIR, 'happy_control/nonlinear_moments/moments_grading.pickle'), 'rb') as f:
                 indeces = pickle.load(f)
         for i in range(1, max_order + 1):
             order_res = {}
@@ -460,10 +460,10 @@ class ControlSystem:
         """
 
         if fliess:
-            with open(os.path.join(BASE_DIR, 'napalm_control/fliess/lie_basis.pickle'), 'rb') as lb:
+            with open(os.path.join(BASE_DIR, 'happy_control/fliess/lie_basis.pickle'), 'rb') as lb:
                 lie_basis = pickle.load(lb)
         else:
-            with open(os.path.join(BASE_DIR, 'napalm_control/nonlinear_moments/lie_basis.pickle'), 'rb') as lb:
+            with open(os.path.join(BASE_DIR, 'happy_control/nonlinear_moments/lie_basis.pickle'), 'rb') as lb:
                 lie_basis = pickle.load(lb)
         lie_coef = {}
         main_part = {}
@@ -575,10 +575,10 @@ class ControlSystem:
         main_part, ideal = self.sort_lie_elements(fliess)
         projections = {}
         if fliess:
-            with open(os.path.join(BASE_DIR, 'napalm_control/fliess/moments_grading.pickle'), 'rb') as f:
+            with open(os.path.join(BASE_DIR, 'happy_control/fliess/moments_grading.pickle'), 'rb') as f:
                 indeces = pickle.load(f)
         else:
-            with open(os.path.join(BASE_DIR, 'napalm_control/nonlinear_moments/moments_grading.pickle'), 'rb') as f:
+            with open(os.path.join(BASE_DIR, 'happy_control/nonlinear_moments/moments_grading.pickle'), 'rb') as f:
                 indeces = pickle.load(f)
         main_orders, bad_orders = main_part.keys(), ideal.keys()
         i = 1
@@ -741,7 +741,7 @@ class ControlSystem:
 
     def calc_b_0_stationary(self):
         projections = self.projections
-        with open(os.path.join(BASE_DIR, 'napalm_control/nonlinear_moments/moments_grading.pickle'), 'rb') as f:
+        with open(os.path.join(BASE_DIR, 'happy_control/nonlinear_moments/moments_grading.pickle'), 'rb') as f:
             indeces = pickle.load(f)
         orders = list(projections.keys())
         for order in orders:
@@ -851,7 +851,7 @@ class ControlSystem:
 
     def calc_b_1_stationary(self):
         projections = self.projections
-        with open(os.path.join(BASE_DIR, 'napalm_control/nonlinear_moments/moments_grading.pickle'), 'rb') as f:
+        with open(os.path.join(BASE_DIR, 'happy_control/nonlinear_moments/moments_grading.pickle'), 'rb') as f:
             indeces = pickle.load(f)
         orders = list(projections.keys())
         for order in orders:
@@ -984,10 +984,10 @@ class ControlSystem:
             if self.b_0_stationary:
                 self.calc_b_1_stationary()
         if fliess:
-            with open(os.path.join(BASE_DIR, 'napalm_control/fliess/moments_grading.pickle'), 'rb') as f:
+            with open(os.path.join(BASE_DIR, 'happy_control/fliess/moments_grading.pickle'), 'rb') as f:
                 indeces = pickle.load(f)
         else:
-            with open(os.path.join(BASE_DIR, 'napalm_control/nonlinear_moments/moments_grading.pickle'), 'rb') as f:
+            with open(os.path.join(BASE_DIR, 'happy_control/nonlinear_moments/moments_grading.pickle'), 'rb') as f:
                 indeces = pickle.load(f)
         orders = list(projections.keys())
         for order in orders:

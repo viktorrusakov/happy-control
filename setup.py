@@ -4,14 +4,14 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="napalm_control",
-    version="0.0.6",
+    name="happy_control",
+    version="0.1.0",
     author="Viktor Rusakov",
     author_email="vrusakov66@gmail.com",
     description="Nonlinear Algebraic Approximation in Control systems",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/ViktorRusakov/napalm-control",
+    url="https://github.com/ViktorRusakov/happy-control",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",

@@ -1,2 +1,2 @@
-include napalm_control/fliess/*
-include napalm_control/nonlinear_moments/*
+include happy_control/fliess/*
+include happy_control/nonlinear_moments/*

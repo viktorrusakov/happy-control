@@ -16,7 +16,7 @@ pip install napalm-control
 The main part of the package is implemented in a single class called ControlSystem. This class describes a control system and its methods implement the algorithm of approximation of a given system.
 
 ```python
-from napalm_control.approximation_tools import ControlSystem
+from happy_control.approximation_tools import ControlSystem
 ```
 
 Given a system ![equation](https://latex.codecogs.com/gif.latex?%5Cdot%7Bx%7D%3Da%28t%2Cx%29%20&plus;%20b%28t%2Cx%29u)
@@ -37,7 +37,7 @@ For example, consider a system:
 Then the implementation using the package would be as follows:
 ```python
 import sympy as sym
-from napalm_control.approximation_tools import ControlSystem
+from happy_control.approximation_tools import ControlSystem
 
 x1, t = sym.symbols('x_{1} t')
 a = sym.Matrix([0, -sym.Rational(1, 2)*x1**2 - 4*t*x1 - 3*t**2*x1, -x1**2 - 2*t*x1 - 3*t**2*x1])
