@@ -59,10 +59,18 @@ class ControlSystem:
         n = self.dim
         x_dots = sym.symbols(r'\dot{{x}}_1:{}'.format(n + 1))
         u = sym.Symbol('u', commutative=False)
+        u_1 = sym.Symbol('u_{1}', commutative=False)
+        u_2 = sym.Symbol('u_{2}', commutative=False)
         for i in range(n):
-            if fliess and i == n // 2:
-                res += r'''{} &= {}        &   x^0={}\\'''.format(sym.latex(x_dots[i]), sym.latex(a[i] + b[i]*u),
-                                                                  sym.latex(self.init_point.T))
+            if fliess:
+                if i == n // 2:
+                    res += r'''{} &= {}        &   x^0={}\\'''.format(
+                        sym.latex(x_dots[i]),
+                        sym.latex(a[i] * u_1 + b[i] * u_2),
+                        sym.latex(self.init_point.T)
+                    )
+                else:
+                    res += r'''{} &= {}\\'''.format(sym.latex(x_dots[i]), sym.latex(a[i] * u_1 + b[i] * u_2))
             else:
                 res += r'''{} &= {}\\'''.format(sym.latex(x_dots[i]), sym.latex(a[i] + b[i] * u))
         res += r'''\end{aligned}
@@ -80,23 +88,23 @@ class ControlSystem:
         j = 1
         var = 'eta' if fliess else 'xi'
         for order, brackets_info in lie_elems.items():
-            text += r'''\mathcal{{A}}_{{{}}}: '''.format(order)
+            text += r'''\mathcal{{{}}}_{{{}}}: '''.format('F' if fliess else 'A', order)
             for bracket, v in brackets_info.items():
                 if ']' not in bracket:
                     if '.' not in bracket:
-                        lie_for_latex = r'''b_{{{}}}&=\{}_{{{}}} '''.format(j, var, bracket)
+                        lie_for_latex = r'''g_{{{}}}&=\{}_{{{}}} '''.format(j, var, bracket)
                     else:
                         bracket = bracket.split('.')
-                        lie_for_latex = r'''b_{{{}}}&=[\{}_{{{}}}, \{}_{{{}}}] '''.format(j, var, bracket[0],
+                        lie_for_latex = r'''g_{{{}}}&=[\{}_{{{}}}, \{}_{{{}}}] '''.format(j, var, bracket[0],
                                                                                           var, bracket[1])
                 else:
                     lie_split = bracket.split(']')
                     first_elem = lie_split[0].split('.')
-                    lie_for_latex = r'''b_{{{}}}&=[[\{}_{{{}}}, \{}_{{{}}}],'''.format(j, var, first_elem[0],
+                    lie_for_latex = r'''g_{{{}}}&=[[\{}_{{{}}}, \{}_{{{}}}],'''.format(j, var, first_elem[0],
                                                                                        var, first_elem[1])
                     for a in lie_split[1:]:
                         lie_for_latex += r'''\{}_{{{}}}],'''.format(var, a)
-                lie_for_latex = lie_for_latex[:-1] + r' &' + r'''{}(b_{{{}}})&={}\\'''.format('c' if fliess else 'v',
+                lie_for_latex = lie_for_latex[:-1] + r' &' + r'''{}(g_{{{}}})&={}\\'''.format('c' if fliess else 'v',
                                                                                               j, sym.latex(v.T))
                 text += lie_for_latex
                 j += 1
@@ -115,7 +123,7 @@ class ControlSystem:
         j = 1
         var = 'eta' if fliess else 'xi'
         for order, brackets_info in main_part.items():
-            text += r'''\mathcal{{A}}_{{{}}}: '''.format(order)
+            text += r'''\mathcal{{{}}}_{{{}}}: '''.format('F' if fliess else 'A', order)
             for bracket in brackets_info:
                 if ']' not in bracket:
                     if '.' not in bracket:
@@ -139,17 +147,17 @@ class ControlSystem:
 
     def get_ideal_text(self, fliess=False):
         ideal = self.ideal
-        text = r'''\centerline{{\Large\bf {} ideal elements}}
+        text = r'''\centerline{{\Large\bf The generating set of the {} ideal}}
         \begin{{align*}}
         '''.format('Left' if fliess else 'Right')
         j = 1
         var = 'eta' if fliess else 'xi'
         for order, brackets_info in ideal.items():
             if brackets_info:
-                text += r'''\mathcal{{A}}_{{{}}}: '''.format(order)
+                text += r'''\mathcal{{{}}}_{{{}}}: '''.format('F' if fliess else 'A', order)
                 for bracket, v in brackets_info.items():
                     split_to_addends = bracket.split('|')
-                    latex_text = r'''z_{{{}}}&='''.format(j)
+                    latex_text = r'''d_{{{}}}&='''.format(j)
                     value = r''''''
                     for addend in split_to_addends:
                         if 'x' in addend:
@@ -178,7 +186,7 @@ class ControlSystem:
                         latex_text += value[1:]
                     else:
                         latex_text += value
-                    text += latex_text + r' &' + r'''{}(z_{{{}}})&={}\\'''.format('c' if fliess else 'v',
+                    text += latex_text + r' &' + r'''{}(d_{{{}}})&={}\\'''.format('c' if fliess else 'v',
                                                                                   j, sym.latex(v.T))
                     j += 1
                     if j % 30 == 0:
@@ -201,7 +209,7 @@ class ControlSystem:
         '''
         var = 'eta' if fliess else 'xi'
         for order, proj_info in projections.items():
-            text += r'''\mathcal{{A}}_{{{}}}: '''.format(order)
+            text += r'''\mathcal{{{}}}_{{{}}}: '''.format('F' if fliess else 'A', order)
             order_matrix = []
             order_lie_basis = []
             for lie_element, r in lie_basis[order].items():
@@ -259,7 +267,7 @@ class ControlSystem:
         text += r'''\end{align*}'''
         return text
 
-    def get_approx_system_text(self):
+    def get_approx_system_text(self, fliess=False):
         text = r'''\centerline{\Large\bf Approximating system}
         \[
         \left\{
@@ -267,8 +275,13 @@ class ControlSystem:
         '''
         n = self.dim
         x_dots = sym.symbols(r'\dot{{x}}_1:{}'.format(n + 1))
-        u = sym.Symbol('u', commutative=False)
-        res = self.b_0 + self.b_1 * u
+        if fliess:
+            u_1 = sym.Symbol('u_{1}', commutative=False)
+            u_2 = sym.Symbol('u_{2}', commutative=False)
+            res = self.b_0 * u_1 + self.b_1 * u_2
+        else:
+            u = sym.Symbol('u', commutative=False)
+            res = self.b_0 + self.b_1 * u
         for i in range(n):
             text += r'''{} &= {}\\'''.format(sym.latex(x_dots[i]), sym.latex(res[i]))
         text += r'''\end{aligned}
@@ -315,7 +328,7 @@ class ControlSystem:
         lie_main_part_text = self.get_lie_main_text(fliess)
         right_ideal_text = self.get_ideal_text(fliess)
         projections_text = self.get_projections_text(fliess)
-        approx_system_text = self.get_approx_system_text()
+        approx_system_text = self.get_approx_system_text(fliess)
         text = init_text + series_text + lie_basis_text + lie_main_part_text + right_ideal_text +\
                projections_text + approx_system_text
         if not fliess:
@@ -861,9 +874,9 @@ class ControlSystem:
                 if projection['xi_prime'].endswith('e'):
                     split_value = projection['xi_prime'].split('x')
                     if len(split_value) == 2:
-                        self.b_1_stationary[projection['index'] - 1] += sym.Rational(split_value[0])
+                        self.b_1_stationary[projection['index'] - 1] += -sym.Rational(split_value[0])
                     else:
-                        self.b_1_stationary[projection['index'] - 1] += sym.Rational(1)
+                        self.b_1_stationary[projection['index'] - 1] += sym.Rational(-1)
                     continue
                 if not projection['xi_prime'] or (cur_order == 0 and projection['xi_prime'].endswith('0')):
                     continue
