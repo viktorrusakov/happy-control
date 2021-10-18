@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="happy_control",
-    version="0.1.0",
+    version="0.1.1",
     author="Viktor Rusakov",
     author_email="vrusakov66@gmail.com",
     description="Nonlinear Algebraic Approximation in Control systems",
