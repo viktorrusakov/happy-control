@@ -19,7 +19,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
-    install_requres=[
+    install_requires=[
         'antlr4-python3-runtime>=4.8',
         'Cython>=0.29.14',
         'numpy>=1.18.1',
